@@ -1,21 +1,61 @@
 #! /bin/bash
-export ANT_HOME="/Users/valliant/cfdistro/ant/"
+reldir=`dirname $0`
+cd $reldir/build
+ANTCMD="/bin/sh $HOME/cfdistro/ant/bin/ant -nouserlib -f build.xml"
+export ANT_HOME=$HOME/cfdistro/ant
+CFDISTRO_ZIP=$HOME/cfdistro/cfdistro.zip
+if [ "$HTTP_CLIENT" = "" ]; then
+    if type -p curl >/dev/null 2>&1; then
+        if [ "$https_proxy" != "" ]; then
+            CURL_PROXY="-x $https_proxy"
+        fi
+        HTTP_CLIENT="curl $CURL_PROXY -f -L -o"
+    else
+        HTTP_CLIENT="wget -O"
+    fi
+fi
+if [ ! -d "$ANT_HOME" ]; then
+        export ANT_HOME=/opt/cfdistro/ant
+        ANTCMD="/bin/sh /opt/cfdistro/ant/bin/ant -nouserlib -f build.xml"
+fi
+if [ ! -d "$ANT_HOME" ]; then
+    if [ -r "$CFDISTRO_ZIP" ]; then
+      echo "The zip was already saved to $CFDISTRO_ZIP."
+      echo "If you wish to re-download, delete it."
+      exit 1
+    fi
+    echo "Downloading cfdistro now..."
+    CFDISTRO_DIR=`dirname "$CFDISTRO_ZIP"`
+    mkdir -p "$CFDISTRO_DIR"
+    CFDISTRO_URL="https://github.com/denuno/cfdistro/zipball/master"
+    $HTTP_CLIENT "$CFDISTRO_ZIP" "$CFDISTRO_URL"
+    if [ $? != 0 ]; then
+        echo "Failed to download $CFDISTRO_URL"
+        echo "If you have an old version of libssl you may not have the correct"
+        echo "certificate authority. Either upgrade or set HTTP_CLIENT to insecure:"
+        echo "  export HTTP_CLIENT=\"wget --no-check-certificate -O\" # or"
+        echo "  export HTTP_CLIENT=\"curl --insecure -f -L -o"
+        rm $CFDISTRO_ZIP 2> /dev/null
+        exit 1
+    fi
+	unzip "$CFDISTRO_ZIP" -d "$CFDISTRO_DIR"
+fi
 if [ -z "$1" ]; then
-echo "ormshen control script"
+echo "mura-releng control script"
 OPTIONS="start stop help list-targets update exit"
 select opt in $OPTIONS; do
 if [ "$opt" = "start" ]; then
-	/Users/valliant/cfdistro/ant/bin/ant -f build/build.xml build.start.launch
+	$ANTCMD build.start.launch
 	exit
 elif [ "$opt" = "stop" ]; then
-	/Users/valliant/cfdistro/ant/bin/ant -f build/build.xml server.stop
+	$ANTCMD server.stop
 	exit
 elif [ "$opt" = "help" ]; then
-	echo "usage (skips this prompt): ormshen.sh [start|stop|{target}]"
+	echo "usage (skips this prompt): mura-releng [start|stop|{target}]"
 elif [ "$opt" = "list-targets" ]; then
-	/Users/valliant/cfdistro/ant/bin/ant -f build/build.xml help
+	$ANTCMD help
 elif [ "$opt" = "update" ]; then
-	/Users/valliant/cfdistro/ant/bin/ant -f build/build.xml project.update
+	$ANTCMD project.update
 elif [ "$opt" = "exit" ]; then
 	exit
 else
@@ -24,8 +64,6 @@ else
 fi
 done
 fi
-reldir=`dirname $0`
-cd $reldir/build
 target=$1
 parameters=""
 shift
@@ -33,4 +71,6 @@ for var in "$@"
 do
     parameters="$parameters -D$var"
 done
-/bin/sh /Users/valliant/cfdistro/ant/bin/ant -nouserlib -f build.xml $target -Dbasedir=. $parameters
+$ANTCMD $target -Dbasedir=. $parameters
+	
+			
