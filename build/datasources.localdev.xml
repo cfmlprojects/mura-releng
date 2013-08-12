@@ -1,0 +1,40 @@
+<datasources>
+
+	<datasource 
+		name="mura-releng" 
+		class="org.h2.Driver" 
+		host="127.0.0.1" 
+		port="3306" 
+		database="mura-releng"
+		username="@dsn.mura.username@" 
+		password="@dsn.mura.password@" 
+		blob="false"
+		clob="false" 
+		sqlstoredprocedures="true"
+		sqlinsert="true"
+		sqlselect="true"
+		sqlupdate="true"
+		sqldelete="true"
+		maintainconnection="true"
+		logintimeout="120"
+		connectionretries="0"
+		connectionlimit="-1"
+		connectiontimeout="1"
+		jdbc="h2"
+		jdbcstring="jdbc:h2:@war.target.dir@/WEB-INF/railo/ormshen"
+		 />
+
+	<datasource 
+		name="mura" 
+		host="127.0.0.1" 
+		port="3306" 
+		database="mura-releng"
+		username="@dsn.mura.username@" 
+		password="@dsn.mura.password@" 
+		jdbc="mysql"
+		class="@dsn.mura.class@" 
+		jdbcstring="@dsn.mura.url@"
+		 />
+
+
+</datasources>

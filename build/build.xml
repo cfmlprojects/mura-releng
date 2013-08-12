@@ -1,0 +1,62 @@
+<project name="distro.build" default="build" basedir="./" xmlns:antcontrib="antlib:net.sf.antcontrib">
+
+	<loadproperties srcfile="build.properties"/>
+	<import file="${cfdistro.build.file}"/>
+
+	<target name="mura.getversion">
+		<loadfile srcFile="${src.dir}/requirements/mura/configBean.cfc" property="mura.version"/>
+		<antcontrib:propertyregex override="yes" property="mura.version" input="${mura.version}" 
+			regexp=".*?variables.instance.version=&quot;([^&quot;]+).*?" select="\1" />
+		<echo message="Mura Version: ${mura.version}" />
+	</target>
+	
+	<target name="build" depends="cfdistro.build,mura.getversion">
+		<copy file="settings.ini.cfm" tofile="${src.dir}/config/settings.ini.cfm" />
+		<antcontrib:inifile source="${src.dir}/config/settings.ini.cfm" dest="${src.dir}/config/settings.ini.cfm">
+		   <set section="production" property="autodiscoverplugins" value="true" />
+		</antcontrib:inifile>
+	</target>
+
+	<target name="build.test"  depends="build,mura.initdb">
+	</target>
+
+	<target name="build.mvn.deploy" depends="project.update,build">
+	    <property name="mvn.repo.dest" value="local" />
+	    <property name="mvn.repo.dest" value="remote" />
+	    <property name="mvn.repo.id" value="mvn.repo.${mvn.repo.dest}" />
+	    <property name="maven.repo.local" location="${cfdistro.basedir}/artifacts" />
+		<mvn-repo id="mvn.repo.local" url="file://${maven.repo.local}/" />
+	   	<property name="mvn.type" value="release" />
+		<zip destfile="${dist.dir}/mura.zip" update="false">
+	        <fileset dir="${src.dir}/" excludes="config/settings.ini.cfm" />
+		</zip>
+		<pom-and-deploy pomid="mura.pom" packaging="zip" artifact="${dist.dir}/mura.zip"
+		 groupId="org.getmura" artifactId="mura" version="${mura.version}" name="mura"/>
+	</target>
+
+	<target name="mura.initdb" depends="exists.datasources.xml">
+		<sql
+			driver="${dsn.mura.class}"
+			url="${dsn.mura.url}"
+		    userid="${dsn.mura.username}"
+		    password="${dsn.mura.password}">
+			DROP DATABASE `${dsn.mura.database}`;
+			CREATE DATABASE `${dsn.mura.database}`;
+			<classpath>
+				<path refid="data.lib.path"/>
+			</classpath>
+		</sql>
+		<delete file="${src.dir}/config/settings.ini.cfm" />
+		<antcontrib:runtarget target="server.start" />
+		<antcontrib:post to="http://${server.host}:${server.port.http}/index.cfm" verbose="false" property="mura.setupSubmitButton" failonerror="true"/>
+		<delete file="${src.dir}/config/settings.ini.cfm" />
+		<antcontrib:propertyregex override="yes" property="mura.setupSubmitButton" input="${mura.setupSubmitButton}" 
+			regexp=".*?type=&quot;submit&quot;\sname=&quot;([^&quot;]+).*?" select="\1" />
+		<echo message="${mura.setupSubmitButton}" />
+		<antcontrib:post to="http://${server.host}:${server.port.http}/index.cfm" verbose="false" file="setup.post.txt" failonerror="true">
+			<prop name="${mura.setupSubmitButton}" value="Save Settings"/>
+    	</antcontrib:post>
+		<antcontrib:runtarget target="server.stop" />
+	</target>
+	
+</project>
