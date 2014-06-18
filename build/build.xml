@@ -61,12 +61,7 @@
     <echo message="recreating db: ${dsn.mura.database}" />
     <delete file="${src.dir}/config/settings.ini.cfm" />
     <server-run>
-      <antcontrib:post to="http://${server.host}:${server.port.http}/index.cfm" verbose="false" property="mura.setupSubmitButton"
-        failonerror="true" />
-      <antcontrib:propertyregex override="yes" property="mura.setupSubmitButton" input="${mura.setupSubmitButton}"
-        regexp=".*?type=&quot;submit&quot;\sname=&quot;([^&quot;]+).*?" select="\1" />
-      <echo message="mura.setupSubmitButton hash: ${mura.setupSubmitButton}" />
-      <antcontrib:post to="http://${server.host}:${server.port.http}/index.cfm" verbose="true" file="/tmp/setup.post.txt"
+      <antcontrib:post to="http://${server.host}:${server.port.http}/index.cfm" verbose="true"
         failonerror="true">
         <prop name="production_dbtype" value="mysql" />
         <prop name="auto_create" value="No" />
@@ -84,7 +79,7 @@
         <prop name="production_adminemail" value="admin@localhost.com" />
         <prop name="production_siteidinurls" value="0" />
         <prop name="production_indexfileinurls" value="1" />
-        <prop name="${mura.setupSubmitButton}" value="Save Settings" />
+        <prop name="setupSubmitButton" value="Save Settings" />
       </antcontrib:post>
       <sql driver="${dsn.mura.class}" classpathref="data.lib.path" url="${dsn.mura.url}" userid="${dsn.mura.username}"
         password="${dsn.mura.password}">
