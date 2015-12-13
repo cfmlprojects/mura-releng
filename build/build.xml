@@ -61,7 +61,7 @@
     <echo message="recreating db: ${dsn.mura.database}" />
     <delete file="${src.dir}/config/settings.ini.cfm" />
     <server-run>
-      <antcontrib:post to="http://${server.host}:${server.port.http}/index.cfm" verbose="true"
+      <antcontrib:post to="http://${server.host}:${runwar.port}/index.cfm" verbose="true"
         failonerror="true">
         <prop name="production_dbtype" value="mysql" />
         <prop name="auto_create" value="No" />
