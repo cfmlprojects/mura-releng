@@ -63,6 +63,7 @@
     <server-run>
       <antcontrib:post to="http://${server.host}:${runwar.port}/index.cfm" verbose="true"
         failonerror="true">
+        <prop name="action" value="doSetup" />
         <prop name="production_dbtype" value="mysql" />
         <prop name="auto_create" value="No" />
         <prop name="production_datasource" value="mura" />
